@@ -34,7 +34,7 @@ VectorLite is a lightweight, easy-to-use, and scalable vector database. Primaril
 5. Delete Vectors from the Index
 
 ### TODO:
--> Persist to Disk using basic Serialisation and Deserialisation
--> Add MetaData Filtering
--> Search across multiple tables (Join Functionality?)
--> Figure a way to add a WHERE clause (it's super handy) -- a lot of databases don't have this.
+- Persist to Disk using basic Serialisation and Deserialisation
+- Add MetaData Filtering
+- Search across multiple tables (Join Functionality?)
+- Figure a way to add a WHERE clause (it's super handy) -- a lot of databases don't have this.
