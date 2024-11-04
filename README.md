@@ -8,16 +8,16 @@ VectorLite is a lightweight, easy-to-use, and scalable vector database. Primaril
 1. Database 
 2. Table 
 3. Index
-  A. Flat
-  B. IVF
-  C. HNSW
-  D. PQ
-  E. SQ
+  - Flat
+  - IVF
+  - HNSW
+  - PQ
+  - SQ
 
 4. Embedder
-  A. Sentence Transformer
-  B. OpenAI
-  C. Cohere
+  - Sentence Transformer
+  - OpenAI
+  - Cohere
 
 
 ### Methods in Index Class
