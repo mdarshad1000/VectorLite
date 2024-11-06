@@ -32,10 +32,11 @@ VectorLite is a lightweight, easy-to-use, and scalable vector database. It's pri
 5. **Delete Vectors from the Table**: Removes vectors from the table.
 
 ### TODO:
-- [-] Implement IVF
-- [ ] Implement HNSW
-- [ ] Implement PQ
-- [ ] Implement SQ
+- [x] Implement Flat Index
+- [x] Implement IVF Index
+- [ ] Implement HNSW Index
+- [ ] Implement PQ Index
+- [ ] Implement SQ Index
 - [ ] **Persist to Disk**: Implement serialization and deserialization for data persistence.
 - [ ] **Add Metadata Filtering**: Allow filtering search results based on metadata.
 - [ ] **Search Across Multiple Tables**: Introduce join functionality for querying multiple tables. 
