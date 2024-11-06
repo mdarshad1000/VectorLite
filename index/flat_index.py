@@ -1,11 +1,26 @@
-from abstract_index import AbstractIndex
-from typing import List, Dict
 import numpy as np
+from typing import List, Dict
+from abstract_index import AbstractIndex
+
 
 class FlatIndex(AbstractIndex):
+    """
+    A simple, brute-force indexing class for embedding-based search.
 
-    def __init__(self,table_name: str,ids: list, dimension: int, embeddings: np.array, metadatas: List[Dict] = None):
-        super().__init__(table_name, "FlatIndex (Brute Force)", ids, dimension, embeddings)
+    This class supports adding embeddings and performing similarity search
+    using cosine similarity. It is intended for small-scale datasets due to 
+    its linear time complexity. Guarantees best accuracy
+
+    Attributes:
+        table_name (str): The name of the table associated with this index.
+        ids (list): A list of unique IDs for each embedding.
+        dimension (int): The dimensionality of the embeddings.
+        embeddings (np.ndarray): The matrix of stored embeddings.
+        metadatas (List[Dict], optional): Metadata associated with each embedding.
+    """
+
+    def __init__(self, table_name: str, dimension: int, ids: List, embeddings: np.array, metadatas: List[Dict] = None):
+        super().__init__(table_name, "FlatIndex (Brute Force)", dimension, ids, embeddings)
 
         if not isinstance(embeddings, (np.ndarray, list)):
             raise ValueError("Embeddings should be a NumPy array or a list.")
@@ -24,8 +39,12 @@ class FlatIndex(AbstractIndex):
         
         self.ids = ids
         self.metadatas = metadatas if metadatas is not None else []
+        self.vector_count = self.embeddings.shape[0]
 
     def add(self, id: int, vector: np.array, metadata: Dict = None):
+        if id in self.ids:
+            raise ValueError(f"ID {id} already exists in the index.")
+        
         if vector.ndim != 1:
             raise ValueError("Input vector must be 1-dimensional.")
 
@@ -35,6 +54,7 @@ class FlatIndex(AbstractIndex):
         self.ids.append(id)
         self.embeddings = np.vstack([self.embeddings, vector])
         self.metadatas.append(metadata) if metadata else None
+        self._update_vector_count()
 
     def search(self, query_vector: np.array, top_k: int, filter_param: Dict = None):
 
@@ -55,10 +75,10 @@ class FlatIndex(AbstractIndex):
         cosine_similarities = np.dot(self.embeddings, query_vector) / (np.linalg.norm(self.embeddings, axis=1) * np.linalg.norm(query_vector) + 1e-10)
 
         # Use argpartition to quickly get indices of the top_k highest similarity scores
-        top_k_unsorted_indices = np.argpartition(-cosine_similarities, top_k)[:top_k]
+        unsorted_top_k_indices = np.argpartition(-cosine_similarities, top_k)[:top_k] 
 
         # Sort these indices by similarity scores in descending order
-        sorted_top_k_indices = top_k_unsorted_indices[np.argsort(-cosine_similarities[top_k_unsorted_indices])]
+        sorted_top_k_indices = unsorted_top_k_indices[np.argsort(-cosine_similarities[unsorted_top_k_indices])]
 
         # Retrieve the top_k Result
         result = [
@@ -71,6 +91,3 @@ class FlatIndex(AbstractIndex):
         ]
         
         return result
-        
-
-        

@@ -1,14 +1,16 @@
+import numpy as np
+from typing import List
 from abc import ABC, abstractmethod
 
 class AbstractIndex(ABC):
 
-    def __init__(self, table_name: str, index_type: str, ids: list, dimension: int, vector_count: int):
+    def __init__(self, table_name: str, index_type: str, dimension: int, ids: List, embeddings: np.array):
         self.table_name = table_name
         self.index_type = index_type
-        self.ids = ids
         self.dimension = dimension
-        self.vector_count = vector_count
-
+        self.ids = ids
+        self.embeddings = embeddings
+        self.vector_count = self.embeddings.shape[0]
         
     @abstractmethod
     def add(self):
@@ -24,12 +26,11 @@ class AbstractIndex(ABC):
         """
         pass
 
-    @classmethod
-    def _update_vector_count(cls):
+    def _update_vector_count(self):
         """
         Update vector count in the index.
         """
-        pass
+        self.vector_count += 1
 
     def __str__(self):
         """
@@ -38,7 +39,7 @@ class AbstractIndex(ABC):
         Returns:
             str: A string describing the index.
         """
-        return f"Index Name: {self.index_name} with Dimensions: {self.dimension}"
+        return f"Index Name: {self.index_type} with Dimensions: {self.dimension}"
     
     def __repr__(self):
         """
@@ -47,7 +48,7 @@ class AbstractIndex(ABC):
         Returns:
             str: A string describing the index, including its name and dimension.
         """
-        return f"{self.__class__.__name__}(index_name={self.index_name}, dimension={self.dimension})"
+        return f"{self.__class__.__name__}(index_type={self.index_type}, dimension={self.dimension})"
 
     def __len__(self):
         """
@@ -56,4 +57,4 @@ class AbstractIndex(ABC):
         Returns:
             int: The number of vectors in the index.
         """
-        return len(self.vector_count)
+        return self.vector_count
