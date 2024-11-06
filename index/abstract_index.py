@@ -5,11 +5,21 @@ from abc import ABC, abstractmethod
 class AbstractIndex(ABC):
 
     def __init__(self, table_name: str, index_type: str, dimension: int, ids: List, embeddings: np.array):
+        """
+        Initialize the abstract index. Subclasses should call this via super() and then add their own initialization.
+        
+        Args:
+            table_name (str): Name of the table.
+            index_type (str): Type of the index.
+            dimension (int): Dimension of the vectors.
+            ids (List): List of IDs for the vectors.
+            embeddings (np.array): Array of vector embeddings.
+        """        
         self.table_name = table_name
         self.index_type = index_type
         self.dimension = dimension
         self.ids = ids
-        self.embeddings = embeddings
+        self.embeddings = embeddings if isinstance(embeddings, np.ndarray) else np.array(embeddings)
         self.vector_count = self.embeddings.shape[0]
         
     @abstractmethod
