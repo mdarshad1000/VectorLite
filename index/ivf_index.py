@@ -1,7 +1,7 @@
 import numpy as np
 from typing import List, Dict
-from sklearn.cluster import MiniBatchKMeans
-from abstract_index import AbstractIndex
+from sklearn.cluster import MiniBatchKMeans, KMeans
+from .abstract_index import AbstractIndex
 
 class IVFIndex(AbstractIndex):
 
@@ -11,7 +11,7 @@ class IVFIndex(AbstractIndex):
         dimension: int,
         ids: list,
         embeddings: np.array,
-        n_clusters: int,
+        n_clusters: int = None,
         metadatas: List[Dict] = None,
     ):
         super().__init__(table_name, "IVF", dimension, ids, embeddings)
@@ -19,9 +19,8 @@ class IVFIndex(AbstractIndex):
         if not isinstance(embeddings, (np.ndarray, list)):
             raise ValueError("Embeddings should be a NumPy array or a list.")
 
-        self.embeddings = (
-            embeddings if isinstance(embeddings, np.ndarray) else np.array(embeddings)
-        )
+        self.embeddings = embeddings if isinstance(embeddings, np.ndarray) else np.array(embeddings)
+        self.dimension = dimension
 
         if self.embeddings.ndim == 1:
             self.embeddings = self.embeddings.reshape(1, self.dimension)
@@ -30,17 +29,20 @@ class IVFIndex(AbstractIndex):
             raise ValueError("Embeddings should be a 2D array.")
 
         if self.embeddings.shape[1] != self.dimension:
-            raise ValueError(
-                f"Embeddings dimension does not match index dimension i.e {self.dimension}"
-            )
+            raise ValueError(f"Embeddings dimension does not match index dimension i.e {self.dimension}")
 
+        self.table_name = table_name
         self.ids = ids
         self.metadatas = metadatas if metadatas is not None else []
         self.vector_count = self.embeddings.shape[0]
-        self.n_clusters = n_clusters
+        self.n_clusters = n_clusters if n_clusters else int(np.sqrt(self.vector_count))
 
-        # Create an Inverted Index
-        kmeans = MiniBatchKMeans(n_clusters=self.n_clusters, random_state=0)
+        # Selecting the appropriate KMeans algorithm based on the size of the dataset.
+        if self.vector_count <= 10000:
+            kmeans = KMeans(n_clusters=self.n_clusters, random_state=0)
+        else:
+            kmeans = MiniBatchKMeans(n_clusters=self.n_clusters, random_state=0)
+        
         kmeans.fit(self.embeddings)
         self.clusters_labels = kmeans.labels_
         self.cluster_centers = kmeans.cluster_centers_
@@ -64,9 +66,7 @@ class IVFIndex(AbstractIndex):
             raise ValueError(
                 f"Vector dimension ({vector.size}) does not match index dimension ({self.dimension})."
             )
-
-        # TODO: Add a check for unique ID
-
+        
         self.ids.append(id)
         self.embeddings = np.vstack([self.embeddings, vector])
         self.metadatas.append(metadata) if metadata else None
@@ -102,7 +102,7 @@ class IVFIndex(AbstractIndex):
                 + 1e-10
             )
             score[doc_id] = cosine_similarity
-        
+
         # Sort the indices by similarity scores in descending order
         sorted_top_k = sorted(score.items(), key=lambda x: x[1], reverse=True)[:top_k] # -> [(5, 0.9), (1, 0.8), (3, 0.5)] if top_k = 3
         result = [
