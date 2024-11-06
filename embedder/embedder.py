@@ -107,15 +107,15 @@ if __name__ == "__main__":
     embedder = get_embedder("sentence-transformer", model_name="all-MiniLM-L6-v2")
     sentences = ["Hello, world!", "How are you?"]
 
-    # embeddings = embedder.get_embeddings(sentences)
-    # print(f"SentenceTransformer Embeddings: {embeddings} with dimensions {len(embeddings[0])}")
+    embeddings = embedder.get_embeddings(sentences)
+    print(f"SentenceTransformer Embeddings: {embeddings} with dimensions {len(embeddings[0])}")
 
     # Example: Get embeddings using OpenAI (make sure your OPENAI_API_KEY is set)
     embedder = get_embedder("openai", model_name="text-embedding-3-small")
     embeddings = embedder.get_embeddings(sentences)
-    print(f"OpenAI Embeddings: with dimensions {len(embeddings[0])}")
+    print(f"OpenAI Embeddings: {embeddings} with dimensions {len(embeddings[0])}")
 
     # # Example: Get embeddings using Cohere (make sure your COHERE_API_KEY is set)
-    # embedder = get_embedder("cohere", model_name="embed-english-v3.0")
-    # embeddings = embedder.get_embeddings(sentences)
-    # print(f"Cohere Embeddings: {embeddings} with dimensions {len(embeddings[0])}")
+    embedder = get_embedder("cohere", model_name="embed-english-v3.0")
+    embeddings = embedder.get_embeddings(sentences)
+    print(f"Cohere Embeddings: {embeddings} with dimensions {len(embeddings[0])}")
