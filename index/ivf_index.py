@@ -3,23 +3,6 @@ from typing import List, Dict
 from sklearn.cluster import MiniBatchKMeans
 from abstract_index import AbstractIndex
 
-"""
-Algorithm Steps
-
-Input: query_embedding (numpy array), top_k (int).
-Check if top_k > 0; raise error if not.
-Calculate distances from query_embedding to each cluster center.
-Find the closest cluster using np.argmin().
-Retrieve Top K Results:
-
-For each index in the closest cluster:
-Calculate cosine similarity with the query_embedding.
-Store indices and their similarity scores.
-Sort the indices by similarity scores in descending order.
-Return the top k indices.
-"""
-
-
 class IVFIndex(AbstractIndex):
 
     def __init__(
