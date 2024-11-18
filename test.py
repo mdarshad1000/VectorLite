@@ -91,7 +91,6 @@ def update_cohort_retention(customers):
         # Parse start and end dates
         start_date = datetime.strptime(customer["startDate"], "%Y-%m-%d")
         cohort_month = start_date.strftime("%Y-%m")
-        print(cohort_month)
 
         # Handle active customers (endDate is None)
         if customer["endDate"]:
