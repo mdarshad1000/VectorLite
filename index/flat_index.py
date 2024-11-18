@@ -57,6 +57,11 @@ class FlatIndex(AbstractIndex):
         self.vector_count = self.embeddings.shape[0]
 
     def add(self, id: int, vector: np.array, metadata: Dict = None):
+
+        # By default the Embedder module returns a list of vectors, so we need to handle that case
+        if vector.ndim != 1 and len(vector[0]) == self.dimension:
+            vector = vector[0]
+        
         if id in self.ids:
             raise ValueError(f"ID {id} already exists in the index.")
 
@@ -72,6 +77,7 @@ class FlatIndex(AbstractIndex):
         self.embeddings = np.vstack([self.embeddings, vector])
         self.metadatas.append(metadata) if metadata else None
         self._update_vector_count()
+
 
     def search(self, query_vector: np.array, top_k: int, filter_param: Dict = None):
 
@@ -114,5 +120,4 @@ class FlatIndex(AbstractIndex):
             }
             for i in sorted_top_k_indices
         ]
-
         return result
