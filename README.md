@@ -39,6 +39,4 @@ VectorLite is a lightweight, easy-to-use, and scalable vector database. It's pri
 - [ ] Implement SQ Index
 - [ ] **Persist to Disk**: Implement serialization and deserialization for data persistence.
 - [ ] **Add Metadata Filtering**: Allow filtering search results based on metadata.
-- [ ] **Search Across Multiple Tables**: Introduce join functionality for querying multiple tables. 
-
-- [ ]
+- [ ] **Search Across Multiple Tables**: Introduce join functionality for querying multiple tables.
