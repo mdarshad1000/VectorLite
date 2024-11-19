@@ -19,24 +19,13 @@ class FlatIndex(AbstractIndex):
         metadatas (List[Dict], optional): Metadata associated with each embedding.
     """
 
-    def __init__(
-        self,
-        table_name: str,
-        dimension: int,
-        ids: List,
-        embeddings: np.array,
-        metadatas: List[Dict] = None,
-    ):
-        super().__init__(
-            table_name, "FlatIndex (Brute Force)", dimension, ids, embeddings
-        )
+    def __init__(self,table_name: str,dimension: int,ids: List,embeddings: np.array,metadatas: List[Dict] = None,):
+        super().__init__(table_name, "FlatIndex (Brute Force)", dimension, ids, embeddings)
 
         if not isinstance(embeddings, (np.ndarray, list)):
             raise ValueError("Embeddings should be a NumPy array or a list.")
 
-        self.embeddings = (
-            embeddings if isinstance(embeddings, np.ndarray) else np.array(embeddings)
-        )
+        self.embeddings = (embeddings if isinstance(embeddings, np.ndarray) else np.array(embeddings))
         self.dimension = dimension
 
         # if 1D array, then convert to 2D
@@ -47,9 +36,7 @@ class FlatIndex(AbstractIndex):
             raise ValueError("Embeddings should be a 1D or 2D array.")
 
         if self.embeddings.shape[1] != self.dimension:
-            raise ValueError(
-                f"Embeddings dimension does not match index dimension i.e {self.dimension}"
-            )
+            raise ValueError(f"Embeddings dimension does not match index dimension i.e {self.dimension}")
 
         self.table_name = table_name
         self.ids = ids
@@ -58,10 +45,16 @@ class FlatIndex(AbstractIndex):
 
     def add(self, id: int, vector: np.array, metadata: Dict = None):
 
+        # Handle input validation
+        if not isinstance(vector, (np.ndarray, list)):
+            raise ValueError("Vector should be a NumPy array or a list.")
+        
+        vector = vector if isinstance(vector, np.ndarray) else np.array(vector)
+
         # By default the Embedder module returns a list of vectors, so we need to handle that case
         if vector.ndim != 1 and len(vector[0]) == self.dimension:
             vector = vector[0]
-        
+
         if id in self.ids:
             raise ValueError(f"ID {id} already exists in the index.")
 
@@ -78,7 +71,6 @@ class FlatIndex(AbstractIndex):
         self.metadatas.append(metadata) if metadata else None
         self._update_vector_count()
 
-
     def search(self, query_vector: np.array, top_k: int, filter_param: Dict = None):
 
         if top_k <= 0:
@@ -88,9 +80,7 @@ class FlatIndex(AbstractIndex):
             raise ValueError("Input vector must be 1-dimensional.")
 
         if query_vector.size != self.dimension:
-            raise ValueError(
-                f"Vector dimension ({query_vector.size}) does not match index dimension ({self.dimension})."
-            )
+            raise ValueError(f"Vector dimension ({query_vector.size}) does not match index dimension ({self.dimension}).")
 
         # TODO: Implement  Metadata Filtering to narrow search space
         # - Post Filtering
@@ -98,17 +88,13 @@ class FlatIndex(AbstractIndex):
 
         # Calculate Cosine similarity -> cosine_similarity(A, B) = cos(Θ) = (A.B) / (|A|*|B|)
         cosine_similarities = np.dot(self.embeddings, query_vector) / (
-            np.linalg.norm(self.embeddings, axis=1) * np.linalg.norm(query_vector)
-            + 1e-10
-        )
+            np.linalg.norm(self.embeddings, axis=1) * np.linalg.norm(query_vector)+ 1e-10)
 
         # Use argpartition to quickly get indices of the top_k highest similarity scores
         unsorted_top_k_indices = np.argpartition(-cosine_similarities, top_k)[:top_k]
 
         # Sort these indices by similarity scores in descending order
-        sorted_top_k_indices = unsorted_top_k_indices[
-            np.argsort(-cosine_similarities[unsorted_top_k_indices])
-        ]
+        sorted_top_k_indices = unsorted_top_k_indices[np.argsort(-cosine_similarities[unsorted_top_k_indices])]
 
         # Retrieve the top_k Result
         result = [
