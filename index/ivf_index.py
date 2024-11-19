@@ -6,23 +6,14 @@ from .abstract_index import AbstractIndex
 
 class IVFIndex(AbstractIndex):
 
-    def __init__(
-        self,
-        table_name: str,
-        dimension: int,
-        ids: list,
-        embeddings: np.array,
-        n_clusters: int = None,
-        metadatas: List[Dict] = None,
-    ):
+    def __init__(self, table_name: str, dimension: int, ids: list, embeddings: np.array, n_clusters: int = None, metadatas: List[Dict] = None):
         super().__init__(table_name, "IVF", dimension, ids, embeddings)
 
         if not isinstance(embeddings, (np.ndarray, list)):
             raise ValueError("Embeddings should be a NumPy array or a list.")
 
-        self.embeddings = (
-            embeddings if isinstance(embeddings, np.ndarray) else np.array(embeddings)
-        )
+        self.embeddings = (embeddings if isinstance(embeddings, np.ndarray) else np.array(embeddings))
+
         self.dimension = dimension
 
         if self.embeddings.ndim == 1:
@@ -32,9 +23,7 @@ class IVFIndex(AbstractIndex):
             raise ValueError("Embeddings should be a 2D array.")
 
         if self.embeddings.shape[1] != self.dimension:
-            raise ValueError(
-                f"Embeddings dimension does not match index dimension i.e {self.dimension}"
-            )
+            raise ValueError(f"Embeddings dimension does not match index dimension i.e {self.dimension}")
 
         self.table_name = table_name
         self.ids = ids
@@ -46,9 +35,7 @@ class IVFIndex(AbstractIndex):
         if self.vector_count <= 10000:
             self.kmeans_method = KMeans(n_clusters=self.n_clusters, random_state=0)
         else:
-            self.kmeans_method = MiniBatchKMeans(
-                n_clusters=self.n_clusters, random_state=0
-            )
+            self.kmeans_method = MiniBatchKMeans(n_clusters=self.n_clusters, random_state=0)
 
         self._build_index()
 
@@ -58,7 +45,8 @@ class IVFIndex(AbstractIndex):
         self.clusters_labels = self.kmeans_method.labels_
         self.cluster_centers = self.kmeans_method.cluster_centers_
 
-        # Create an inverted index mapping cluster labels to sentence indices. 3 clusters and 6 sentences -> {0: [1, 3 , 5], 1: [2, 4], 2: [6]}
+        # Create an inverted index mapping cluster labels to sentence indices. 
+        # 3 clusters and 6 sentences -> {0: [1, 3 , 5], 1: [2, 4], 2: [6]}
         self.inverted_index = {}
         for item, label in enumerate(self.clusters_labels):
             if label not in self.inverted_index:
@@ -70,6 +58,7 @@ class IVFIndex(AbstractIndex):
         # Handle input validation
         if not isinstance(vector, (np.ndarray, list)):
             raise ValueError("Vector should be a NumPy array or a list.")
+        
         vector = vector if isinstance(vector, np.ndarray) else np.array(vector)
 
         # By default the Embedder module returns a list of vectors, so we need to handle that case
@@ -83,9 +72,7 @@ class IVFIndex(AbstractIndex):
             raise ValueError("Input vector must be 1-dimensional.")
 
         if vector.size != self.dimension:
-            raise ValueError(
-                f"Vector dimension ({vector.size}) does not match index dimension ({self.dimension})."
-            )
+            raise ValueError(f"Vector dimension ({vector.size}) does not match index dimension ({self.dimension}).")
 
         self.ids.append(id)
         self.embeddings = np.vstack([self.embeddings, vector])
@@ -102,9 +89,7 @@ class IVFIndex(AbstractIndex):
             raise ValueError("Input vector must be 1-dimensional.")
 
         if query_vector.size != self.dimension:
-            raise ValueError(
-                f"Vector dimension ({query_vector.size}) does not match index dimension ({self.dimension})."
-            )
+            raise ValueError(f"Vector dimension ({query_vector.size}) does not match index dimension ({self.dimension}).")
 
         # TODO: Implement  Metadata Filtering to narrow search space
         # - Post Filtering
@@ -118,22 +103,17 @@ class IVFIndex(AbstractIndex):
         score = {}  # -> {1: 0.8, 2: 0.1, 3: 0.5, 4: 0.2, 5: 0.9}
         for doc_id in self.inverted_index[closest_cluster_index]:
             cosine_similarity = np.dot(query_vector, self.embeddings[doc_id]) / (
-                np.linalg.norm(query_vector) * np.linalg.norm(self.embeddings[doc_id])
-                + 1e-10
-            )
+                np.linalg.norm(query_vector) * np.linalg.norm(self.embeddings[doc_id])+ 1e-10)
             score[doc_id] = cosine_similarity
 
         # Sort the indices by similarity scores in descending order
-        sorted_top_k = sorted(score.items(), key=lambda x: x[1], reverse=True)[
-            :top_k
-        ]  # -> [(5, 0.9), (1, 0.8), (3, 0.5)] if top_k = 3
+        sorted_top_k = sorted(score.items(), key=lambda x: x[1], reverse=True)[:top_k]  # -> [(5, 0.9), (1, 0.8), (3, 0.5)] if top_k = 3
+
         result = [
             {
                 "id": self.ids[sorted_top_k[i][0]],
                 "embedding": self.embeddings[sorted_top_k[i][0]],
-                "metadata": (
-                    self.metadatas[sorted_top_k[i][0]] if self.metadatas else {}
-                ),
+                "metadata": (self.metadatas[sorted_top_k[i][0]] if self.metadatas else {}),
                 "score": sorted_top_k[i][1],
             }
             for i in range(len(sorted_top_k))
