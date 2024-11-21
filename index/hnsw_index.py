@@ -3,6 +3,8 @@ import numpy as np
 from typing import List, Dict
 from index.abstract_index import AbstractIndex
 
+# TODO: Include Metadata filtering (post and pre filtering)
+# TODO: Add support for Update and Delete
 
 class HNSWIndex(AbstractIndex):
     '''
@@ -74,14 +76,12 @@ class HNSWIndex(AbstractIndex):
             raise ValueError("Input vector must be 1-dimensional.")
 
         if vector.size != self.dimension:
-            raise ValueError(
-                f"Vector dimension ({vector.size}) does not match index dimension ({self.dimension})."
-        )
+            raise ValueError(f"Vector dimension ({vector.size}) does not match index dimension ({self.dimension}).")
 
         self.index.add_items(vector, id)
+        self.embeddings = np.vstack([self.embeddings, vector])
         self.metadatas.append(metadata) if metadata else None
         self._update_vector_count()
-        self._build_index()
 
     def search(self, query_vector: np.ndarray, top_k: int, filter_param: Dict = None):
         if top_k <= 0:
@@ -95,9 +95,17 @@ class HNSWIndex(AbstractIndex):
 
         labels, distances = self.index.knn_query(query_vector, k=top_k)
         top_k_indices = labels[0]
-        return top_k_indices, distances
-    
+        score = distances[0]
 
-        # TODO: Return formatted results
+        results = [
+            {
+                "id": item,
+                "embedding": self.embeddings[item],
+                "metadata": (self.metadatas[item] if self.metadatas else {}),
+                "score": score[i],
+            }
+            for i, item in enumerate(top_k_indices)
+        ]
+        return results
 
         
