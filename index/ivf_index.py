@@ -5,7 +5,19 @@ from .abstract_index import AbstractIndex
 
 
 class IVFIndex(AbstractIndex):
+    """
+    An efficient embedding-based search index using Inverted File (IVF) structure.
 
+    Suitable for medium to large-scale datasets, it clusters embeddings to speed up search operations. Supports adding embeddings, updating the index, and performing similarity searches with optional metadata filtering.
+
+    Attributes:
+        table_name (str): Name of the associated table.
+        dimension (int): Dimensionality of embeddings.
+        ids (list): Unique IDs for each embedding.
+        embeddings (np.ndarray): Stored embeddings matrix.
+        n_clusters (int, optional): Number of clusters for partitioning.
+        metadatas (List[Dict], optional): Associated metadata for each embedding.
+    """
     def __init__(self, table_name: str, dimension: int, ids: list, embeddings: np.array, n_clusters: int = None, metadatas: List[Dict] = None):
         super().__init__(table_name, "IVF", dimension, ids, embeddings)
 
@@ -89,7 +101,7 @@ class IVFIndex(AbstractIndex):
             raise ValueError("Vector should be a NumPy array or a list.")
         
         query_vector = query_vector if isinstance(query_vector, np.ndarray) else np.array(query_vector)
-        
+
         if query_vector.ndim != 1:
             raise ValueError("Input vector must be 1-dimensional.")
 
