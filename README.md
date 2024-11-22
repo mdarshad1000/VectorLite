@@ -34,7 +34,7 @@ VectorLite is a lightweight, easy-to-use, and scalable vector database. It's pri
 ### TODO:
 - [x] Implement Flat Index
 - [x] Implement IVF Index
-- [ ] Implement HNSW Index
+- [x] Implement HNSW Index
 - [ ] Implement PQ Index
 - [ ] Implement SQ Index
 - [ ] **Persist to Disk**: Implement serialization and deserialization for data persistence.
