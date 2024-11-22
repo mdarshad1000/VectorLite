@@ -24,7 +24,7 @@ class HNSWIndex(AbstractIndex):
         metric (str, optional): The distance metric to use for the HNSW algorithm. Default is "cosine". Other possible options are 'l2' and 'ip'.
         max_elements (int, optional): The maximum number of elements to store in the index. Default is None, which means it will be set to the total number of embeddings.
     '''
-    def __init__(self, table_name: str, dimension: int, ids: list, embeddings: np.ndarray, metadatas: List[Dict] = None, M: int = 16, ef_construction: int = 100, metric: str = "cosine", max_elements: int = None):
+    def __init__(self, table_name: str, dimension: int, ids: list, embeddings: np.array, metadatas: List[Dict] = None, M: int = 16, ef_construction: int = 100, metric: str = "cosine", max_elements: int = None):
         super().__init__(table_name, "HNSW", dimension, ids, embeddings)
 
         if not isinstance(embeddings, (np.ndarray, list)):
@@ -90,10 +90,15 @@ class HNSWIndex(AbstractIndex):
         self.metadatas.extend(metadata) if metadata else None
         self.index.add_items(vector, idx)
 
-    def search(self, query_vector: np.ndarray, top_k: int, filter_param: Dict = None):
+    def search(self, query_vector: np.array, top_k: int, filter_param: Dict = None):
         if top_k <= 0:
             raise ValueError("Top K must be greater than 0")
-
+        
+        # Handle input validation
+        if not isinstance(query_vector, (np.ndarray, list)):
+            raise ValueError("Vector should be a NumPy array or a list.")
+        
+        query_vector = query_vector if isinstance(query_vector, np.ndarray) else np.array(query_vector)
         if query_vector.ndim != 1:
             raise ValueError("Input vector must be 1-dimensional.")
 
