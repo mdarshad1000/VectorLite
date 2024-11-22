@@ -1,5 +1,5 @@
 import numpy as np
-from typing import List, Dict
+from typing import List, Dict, Union
 from sklearn.cluster import MiniBatchKMeans, KMeans
 from .abstract_index import AbstractIndex
 
@@ -53,30 +53,26 @@ class IVFIndex(AbstractIndex):
                 self.inverted_index[label] = []
             self.inverted_index[label].append(item)
 
-    def add(self, id: int, vector: np.array, metadata: Dict = None):
-
+    def add(self, idx: List[int], vector: Union[List, np.array], metadata: Dict = None):
+        
+        if any(i in self.ids for i in idx):
+            raise ValueError("One or more IDs already exist in the index.")
+        
         # Handle input validation
         if not isinstance(vector, (np.ndarray, list)):
             raise ValueError("Vector should be a NumPy array or a list.")
         
         vector = vector if isinstance(vector, np.ndarray) else np.array(vector)
+        
+        if len(idx) != vector.shape[0]:
+            raise ValueError("Each ID must correspond to a single vector.")
 
-        # By default the Embedder module returns a list of vectors, so we need to handle that case
-        if vector.ndim != 1 and len(vector[0]) == self.dimension:
-            vector = vector[0]
+        if any(v.shape[0] != self.dimension for v in vector):
+            raise ValueError("One or more vectors' dimensions do not match the index dimension.")
 
-        if id in self.ids:
-            raise ValueError(f"ID {id} already exists in the index.")
-
-        if vector.ndim != 1:
-            raise ValueError("Input vector must be 1-dimensional.")
-
-        if vector.size != self.dimension:
-            raise ValueError(f"Vector dimension ({vector.size}) does not match index dimension ({self.dimension}).")
-
-        self.ids.append(id)
+        self.ids.extend(idx)
         self.embeddings = np.vstack([self.embeddings, vector])
-        self.metadatas.append(metadata) if metadata else None
+        self.metadatas.extend(metadata) if metadata else None
         self._update_vector_count()
         self._build_index()
 
