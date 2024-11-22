@@ -72,6 +72,12 @@ class FlatIndex(AbstractIndex):
 
         if top_k <= 0:
             raise ValueError("Top K must be greater than 0")
+        
+        # Handle input validation
+        if not isinstance(query_vector, (np.ndarray, list)):
+            raise ValueError("Vector should be a NumPy array or a list.")
+        
+        query_vector = query_vector if isinstance(query_vector, np.ndarray) else np.array(query_vector)
 
         if query_vector.ndim != 1:
             raise ValueError("Input vector must be 1-dimensional.")
