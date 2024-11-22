@@ -21,7 +21,8 @@ class HNSWIndex(AbstractIndex):
         metadatas (List[Dict], optional): Metadata associated with each embedding.
         M (int, optional): The number of links in the HNSW graph. Default is 16.
         ef_construction (int, optional): The number of nearest neighbors to consider during the graph construction. Default is 100.
-        metric (str, optional): The distance metric to use for the HNSW algorithm. Default is "cosine". Other possible options are 'l2' and 'ip'
+        metric (str, optional): The distance metric to use for the HNSW algorithm. Default is "cosine". Other possible options are 'l2' and 'ip'.
+        max_elements (int, optional): The maximum number of elements to store in the index. Default is None, which means it will be set to the total number of embeddings.
     '''
     def __init__(self, table_name: str, dimension: int, ids: list, embeddings: np.ndarray, metadatas: List[Dict] = None, M: int = 16, ef_construction: int = 100, metric: str = "cosine", max_elements: int = None):
         super().__init__(table_name, "HNSW", dimension, ids, embeddings)
@@ -52,10 +53,9 @@ class HNSWIndex(AbstractIndex):
 
         self._build_index(max_element=self.max_elements)
 
-    def add(self, idx: Union[int, List[int]], vector : Union[List, np.array], metadata: Union[Dict, List[Dict], None] = None):
+    def add(self, idx: List[int], vector : Union[List, np.array], metadata: Union[Dict, List[Dict], None] = None):
         
-        new_size = self.vector_count + len(idx) if isinstance(idx, list) else self.vector_count + 1
-
+        new_size = self.vector_count + len(idx)
         if new_size > self.max_elements:
             self._build_index(max_element=new_size)
 
@@ -65,9 +65,8 @@ class HNSWIndex(AbstractIndex):
         
         vector = vector if isinstance(vector, np.ndarray) else np.array(vector) 
         
-        if isinstance(idx, int):
-            idx = [idx]
-            vector = vector[0] 
+        if len(idx) == 1:
+            vector = vector[0]
             # Validate the single vector's dimensions
             if vector.shape[0] != self.dimension:
                 raise ValueError("Vector dimension does not match index dimension.")
