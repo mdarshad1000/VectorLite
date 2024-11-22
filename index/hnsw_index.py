@@ -53,7 +53,7 @@ class HNSWIndex(AbstractIndex):
 
         self._build_index(max_element=self.max_elements)
 
-    def add(self, idx: List[int], vector : Union[List, np.array], metadata: Union[Dict, List[Dict], None] = None):
+    def add(self, idx: List[int], vector : Union[List, np.array], metadata:List[Dict] = None):
         
         new_size = self.vector_count + len(idx)
         if new_size > self.max_elements:
@@ -85,6 +85,7 @@ class HNSWIndex(AbstractIndex):
         for _ in range(len(idx)):
             self._update_vector_count()
 
+        self.ids.extend(idx)
         self.embeddings = np.vstack([self.embeddings, vector])
         self.metadatas.extend(metadata) if metadata else None
         self.index.add_items(vector, idx)
