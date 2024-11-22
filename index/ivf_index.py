@@ -73,7 +73,10 @@ class IVFIndex(AbstractIndex):
         self.ids.extend(idx)
         self.embeddings = np.vstack([self.embeddings, vector])
         self.metadatas.extend(metadata) if metadata else None
-        self._update_vector_count()
+
+        for _ in range(len(idx)):
+            self._update_vector_count()
+
         self._build_index()
 
     def search(self, query_vector: np.array, top_k: int, filter_param: Dict = None):
