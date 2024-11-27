@@ -3,6 +3,10 @@
 # VectorLite
 VectorLite is a lightweight, easy-to-use, and scalable vector database. It's primarily built to explore the workings of vector databases and their practical applications.
 
+<div align="center">
+  <img src="https://drive.google.com/uc?export=view&id=11wRls96Y5Fr8_81JQVd6iUw7fRIfqR5g" alt="Alt Text" width="25%">
+</div>
+
 ## Components of VectorLite 
 
 1. **Database**: The core container for tables and indexes.
