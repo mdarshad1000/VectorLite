@@ -99,9 +99,9 @@ class IVFIndex(AbstractIndex):
         # Handle input validation
         if not isinstance(query_vector, (np.ndarray, list)):
             raise ValueError("Vector should be a NumPy array or a list.")
-        
-        query_vector = query_vector if isinstance(query_vector, np.ndarray) else np.array(query_vector)
 
+        query_vector = query_vector if isinstance(query_vector, np.ndarray) else np.array(query_vector)
+        
         if query_vector.ndim != 1:
             raise ValueError("Input vector must be 1-dimensional.")
 
@@ -114,11 +114,20 @@ class IVFIndex(AbstractIndex):
 
         # Calculate distances from query_embedding to each cluster center to find closes cluster
         distances = np.linalg.norm(query_vector - self.cluster_centers, axis=1)
-        closest_cluster_index = np.argmin(distances)
 
+        # Find the closest cluster(s) to the query vector
+        closest_cluster_indices = np.argsort(distances)
+        indices_to_consider = []
+
+        # if top_k is more than the number of documents in the closest cluster, select docs from the next closest cluster
+        for cluster_index in closest_cluster_indices:
+            indices_to_consider.extend(self.inverted_index[cluster_index])
+            if len(indices_to_consider) >= top_k:
+                break
+        
         # Retrieve the top_k Result
         score = {}  # -> {1: 0.8, 2: 0.1, 3: 0.5, 4: 0.2, 5: 0.9}
-        for doc_id in self.inverted_index[closest_cluster_index]:
+        for doc_id in indices_to_consider[:top_k]:
             cosine_similarity = np.dot(query_vector, self.embeddings[doc_id]) / (
                 np.linalg.norm(query_vector) * np.linalg.norm(self.embeddings[doc_id])+ 1e-10)
             score[doc_id] = cosine_similarity
