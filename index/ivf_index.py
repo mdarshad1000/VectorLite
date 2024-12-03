@@ -3,7 +3,7 @@ from typing import List, Dict, Union
 from sklearn.cluster import MiniBatchKMeans, KMeans
 from .abstract_index import AbstractIndex
 
-
+# TODO: Trigger to Rebuild Index after deletion threshold
 class IVFIndex(AbstractIndex):
     """
     An efficient embedding-based search index using Inverted File (IVF) structure.
@@ -101,7 +101,7 @@ class IVFIndex(AbstractIndex):
             raise ValueError("Vector should be a NumPy array or a list.")
 
         query_vector = query_vector if isinstance(query_vector, np.ndarray) else np.array(query_vector)
-        
+
         if query_vector.ndim != 1:
             raise ValueError("Input vector must be 1-dimensional.")
 
@@ -117,17 +117,18 @@ class IVFIndex(AbstractIndex):
 
         # Find the closest cluster(s) to the query vector
         closest_cluster_indices = np.argsort(distances)
-        indices_to_consider = []
+        self.indices_to_consider = []
 
         # if top_k is more than the number of documents in the closest cluster, select docs from the next closest cluster
         for cluster_index in closest_cluster_indices:
-            indices_to_consider.extend(self.inverted_index[cluster_index])
-            if len(indices_to_consider) >= top_k:
+            self.indices_to_consider.extend(self.inverted_index[cluster_index])
+            if len(self.indices_to_consider) >= top_k:
                 break
         
         # Retrieve the top_k Result
         score = {}  # -> {1: 0.8, 2: 0.1, 3: 0.5, 4: 0.2, 5: 0.9}
-        for doc_id in indices_to_consider[:top_k]:
+        for doc_id in self.indices_to_consider[:top_k]:
+
             cosine_similarity = np.dot(query_vector, self.embeddings[doc_id]) / (
                 np.linalg.norm(query_vector) * np.linalg.norm(self.embeddings[doc_id])+ 1e-10)
             score[doc_id] = cosine_similarity
@@ -145,3 +146,23 @@ class IVFIndex(AbstractIndex):
             for i in range(len(sorted_top_k))
         ]
         return result
+
+
+    def delete_vector(self, idx: List[int]):
+
+        if any(i not in self.ids for i in idx):
+            raise ValueError("One or more IDs not in the index.")
+        
+                # Handle input validation
+        if not isinstance(idx, List):
+            raise ValueError("ID should be a List.")
+        
+        # Impleement Lazy Deletion
+        self.ids = [_id if _id not in idx else None for _id in self.ids ]
+        self.embeddings = [item if index not in idx else None for index, item in enumerate(self.embeddings) ]
+        self.metadatas = [item if index not in idx else None for index, item in enumerate(self.metadatas)]
+        
+        self.indices_to_consider = [i for i in self.indices_to_consider if i not in idx]
+        self.inverted_index = {label: [v for v in vectors if v not in idx] for label, vectors in self.inverted_index.items()}
+        
+        return self.ids, self.embeddings, self.metadatas, self.inverted_index
