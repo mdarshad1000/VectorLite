@@ -53,6 +53,12 @@ class HNSWIndex(AbstractIndex):
 
         self._build_index(max_element=self.max_elements)
 
+    def _build_index(self, max_element:int):
+        index = hnswlib.Index(space=self.metric, dim=self.dimension)
+        index.init_index(max_elements=max_element, ef_construction=self.ef_construction, M=self.M)
+        index.add_items(self.embeddings, self.ids)
+        self.index = index
+    
     def add(self, idx: List[int], vector : Union[List, np.array], metadata:List[Dict] = None):
         
         new_size = self.vector_count + len(idx)
@@ -118,10 +124,3 @@ class HNSWIndex(AbstractIndex):
             for i, item in enumerate(top_k_indices)
         ]
         return results
-
-    def _build_index(self, max_element:int):
-        index = hnswlib.Index(space=self.metric, dim=self.dimension)
-        index.init_index(max_elements=max_element, ef_construction=self.ef_construction, M=self.M)
-        index.add_items(self.embeddings, self.ids)
-        self.index = index
-    
