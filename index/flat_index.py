@@ -69,7 +69,7 @@ class FlatIndex(AbstractIndex):
         self.metadatas.extend(metadata) if metadata else None
 
     def search(self, query_vector: np.array, top_k: int, filter_param: Dict = None):
-
+        
         if top_k <= 0:
             raise ValueError("Top K must be greater than 0")
         
@@ -110,3 +110,20 @@ class FlatIndex(AbstractIndex):
             for i in sorted_top_k_indices
         ]
         return result
+
+    
+    def delete_vector(self, idx: List[int]):
+
+        if any(i not in self.ids for i in idx):
+            raise ValueError("One or more IDs not in the index.")
+        
+        # Handle input validation
+        if not isinstance(idx, List):
+            raise ValueError("ID should be a List.")
+        
+        # Remove the IDs from self.ids
+        self.ids = [_id for _id in self.ids if _id not in idx]
+        self.embeddings = [item for index, item in enumerate(self.embeddings) if index not in idx]
+        self.metadatas = [item for index, item in enumerate(self.metadatas) if index not in idx]
+
+        return self.ids, self.embeddings, self.metadatas
